@@ -295,6 +295,100 @@
         <div class="pen-space">Annotation Space</div>
     </div>
 
+    <!-- INFERENCE -->
+    <div class="slide-container">
+        <div class="content-block">
+            <h2 class="text-4xl font-bold mb-6">Step 4: Inference</h2>
+            <p class="mb-8 text-xl">To generate data, we use the trained network to predict <strong>one token at a time</strong>, rolling the window forward.</p>
+
+            <!-- Custom Inference Diagram -->
+            <div class="bg-white border-2 border-slate-200 rounded-xl p-8 shadow-sm">
+                
+                <!-- Step 1 -->
+                <div class="flex items-center justify-center gap-6 mb-6">
+                    <div class="flex gap-2 p-2 bg-slate-50 border-2 border-slate-300 rounded-lg min-w-[250px] justify-end">
+                        <div class="token-box">91</div>
+                    </div>
+                    <div class="text-slate-400 font-bold">➔</div>
+                    <div class="w-2 h-10 bg-slate-300 rounded"></div>
+                    <div class="text-slate-400 font-bold">➔</div>
+                    <div class="token-box border-emerald-500 text-emerald-700 bg-emerald-50">860</div>
+                </div>
+
+                <!-- Step 2 -->
+                <div class="flex items-center justify-center gap-6 mb-6">
+                    <div class="flex gap-2 p-2 bg-slate-50 border-2 border-slate-300 rounded-lg min-w-[250px] justify-end">
+                        <div class="token-box">91</div>
+                        <div class="token-box bg-blue-50">860</div>
+                    </div>
+                    <div class="text-slate-400 font-bold">➔</div>
+                    <div class="w-2 h-10 bg-slate-300 rounded"></div>
+                    <div class="text-slate-400 font-bold">➔</div>
+                    <div class="token-box border-emerald-500 text-emerald-700 bg-emerald-50">287</div>
+                </div>
+
+                <!-- Step 3 -->
+                <div class="flex items-center justify-center gap-6 mb-6">
+                    <div class="flex gap-2 p-2 bg-slate-50 border-2 border-slate-300 rounded-lg min-w-[250px] justify-end">
+                        <div class="token-box">91</div>
+                        <div class="token-box">860</div>
+                        <div class="token-box bg-blue-50">287</div>
+                    </div>
+                    <div class="text-slate-400 font-bold">➔</div>
+                    <div class="w-2 h-10 bg-slate-300 rounded"></div>
+                    <div class="text-slate-400 font-bold">➔</div>
+                    <div class="token-box border-emerald-500 text-emerald-700 bg-emerald-50">11579</div>
+                </div>
+
+                <!-- Step 4 -->
+                <div class="flex items-center justify-center gap-6">
+                    <div class="flex gap-2 p-2 bg-slate-50 border-2 border-slate-300 rounded-lg min-w-[250px] justify-end">
+                        <div class="token-box">91</div>
+                        <div class="token-box">860</div>
+                        <div class="token-box">287</div>
+                        <div class="token-box bg-blue-50">11579</div>
+                    </div>
+                    <div class="text-slate-400 font-bold">➔</div>
+                    <div class="w-2 h-10 bg-slate-300 rounded"></div>
+                    <div class="text-slate-400 font-bold">➔</div>
+                    <div class="token-box border-emerald-500 text-emerald-700 bg-emerald-50">13659</div>
+                </div>
+
+            </div>
+            <p class="text-center text-sm text-slate-500 mt-4">Retrieved tokens are added/rolled to the context window to be used for later generations.</p>
+        </div>
+        <div class="pen-space">Annotation Space</div>
+    </div>
+
+    <!-- THE BASE MODEL -->
+    <div class="slide-container">
+        <div class="content-block">
+            <h2 class="text-4xl font-bold mb-6">What is a Base Model?</h2>
+            <p class="mb-6 text-xl">The result of pre-training. It just flips a coin for the next word. It doesn't have to make sense, just be statistically correct.</p>
+            
+            <ul class="space-y-4 text-lg mb-8">
+                <li class="flex gap-3"><span class="text-blue-500">▶</span> A token-level internet document simulator</li>
+                <li class="flex gap-3"><span class="text-blue-500">▶</span> Stochastic / probabilistic (different output each run)</li>
+                <li class="flex gap-3"><span class="text-blue-500">▶</span> "Dreams" internet documents</li>
+                <li class="flex gap-3"><span class="text-blue-500">▶</span> Regurgitation: Can recite training docs verbatim from memory</li>
+                <li class="flex gap-3"><span class="text-blue-500">▶</span> A lossy zip file of the internet (useful world knowledge stored in parameters)</li>
+                <li class="flex gap-3"><span class="text-blue-500">▶</span> Capable of "few-shot" translation/QA via clever prompting</li>
+            </ul>
+
+            <div class="action-card">
+                <p class="font-bold text-blue-800 mb-2">🎬 Action: Base Model Demo</p>
+                <a href="https://huggingface.co/Qwen/Qwen3-8B-Base?inference_provider=featherless-ai" target="_blank" class="text-blue-600 hover:underline block mb-2">1. Run Llama 3.1 305B Base Model</a>
+                <p class="text-sm mb-4">Show how it is just concerned about generating the next token, not answering.</p>
+                <p class="text-blue-600 hover:underline cursor-pointer">2. Show Wikipedia Data Exactly Memorized</p>
+            </div>
+            
+            <div class="bg-red-50 border-l-4 border-red-500 p-4 mt-6">
+                <p class="font-bold text-red-700">Conclusion: This is NOT enough for a useful Assistant.</p>
+            </div>
+        </div>
+        <div class="pen-space">Annotation Space</div>
+    </div>
+
     <!-- POST TRAINING: SFT -->
     <div class="slide-container">
         <div class="content-block">
@@ -329,6 +423,29 @@
                 </div>
             </div>
 
+            <!-- NEW SECTION: Thinking & Tools -->
+            <div class="bg-amber-50 p-6 rounded-xl border border-amber-200 shadow-sm mt-8">
+                <h4 class="font-bold text-amber-800 mb-3 text-xl">The "Thinking" Illusion & Why We Need Tools</h4>
+                <p class="text-slate-700 mb-4 text-sm">Models can't "think" or see characters the way humans do. They see compressed tokens. Because of this, simple visual or counting tasks fail unless they are instructed to use external tools (like writing Python code to count).</p>
+                
+                <div class="space-y-4">
+                    <div class="bg-white p-4 rounded-lg border border-slate-200">
+                        <div class="text-xs font-bold text-red-600 uppercase mb-2">❌ Fails (Hallucinates)</div>
+                        <div class="text-sm font-mono break-all bg-slate-50 p-3 rounded border border-slate-100 text-slate-600">
+                            how many dots are below<br><br>
+                            ...................................................................................................................................................................................................................................................
+                        </div>
+                    </div>
+                    <div class="bg-white p-4 rounded-lg border border-slate-200">
+                        <div class="text-xs font-bold text-emerald-600 uppercase mb-2">✅ Succeeds (Using Tools)</div>
+                        <div class="text-sm font-mono break-all bg-slate-50 p-3 rounded border border-slate-100 text-slate-600">
+                            how many dots are below - use code to find out<br><br>
+                            ...................................................................................................................................................................................................................................................
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <div class="action-card">
                 <p class="font-bold text-blue-800 mb-2">🎬 Action: SFT Demonstrations</p>
                 <p class="mb-1 text-sm font-bold">1. Cut-off Dates & Hallucinations:</p>
@@ -340,7 +457,10 @@
                 <a href="https://huggingface.co/Qwen/Qwen2-1.5B-Instruct?inference_provider=featherless-ai" target="_blank" class="text-blue-600 hover:underline text-sm mb-3 block">Test on Qwen Instruct</a>
 
                 <p class="mb-1 text-sm font-bold mt-4">2. Token Math Issues (9.9 vs 9.11)</p>
-                <p class="text-sm mb-2">Explain why Python tools are needed for math ops.</p>
+                <p class="text-sm mb-3">Explain why Python tools are needed for math ops.</p>
+
+                <p class="mb-1 text-sm font-bold mt-4">3. The Dot Counting Test</p>
+                <p class="text-sm mb-2">Copy the dots from the block above into ChatGPT. Show how it fails without code, but succeeds when instructed to use code. Remind them of the Tiktokenizer to explain <em>why</em>.</p>
             </div>
         </div>
         <div class="pen-space">Annotation Space</div>
