@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LLM Technical Deep Dive</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #fafafa;
+            /* Subtle dot grid background for a "whiteboard" feel */
+            background-image: radial-gradient(#cbd5e1 1px, transparent 1px);
+            background-size: 40px 40px;
+        }
+        .slide-container {
+            /* Wide layout: Content on left, massive drawing space on right */
+            display: grid;
+            grid-template-columns: 3fr 2fr; 
+            gap: 2rem;
+            min-height: 80vh;
+            padding: 4rem 2rem;
+            border-bottom: 2px dashed #cbd5e1;
+        }
+        @media (max-width: 1024px) {
+            .slide-container {
+                grid-template-columns: 1fr;
+            }
+        }
+        .content-block {
+            background: white;
+            padding: 3rem;
+            border-radius: 1rem;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
+            border: 1px solid #e2e8f0;
+        }
+        /* Pen space styling */
+        .pen-space {
+            border: 2px dashed #94a3b8;
+            border-radius: 1rem;
+            background: rgba(255, 255, 255, 0.5);
+            display: flex;
+            align-items: flex-start;
+            justify-content: center;
+            padding: 2rem;
+            color: #94a3b8;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            opacity: 0.5;
+        }
+        /* Token Boxes */
+        .token-box {
+            border: 2px solid #334155;
+            border-radius: 0.5rem;
+            padding: 0.5rem 1rem;
+            font-family: monospace;
+            font-size: 1.25rem;
+            font-weight: bold;
+            background: #f8fafc;
+            display: inline-block;
+            text-align: center;
+        }
+        .token-text {
+            font-size: 0.875rem;
+            color: #64748b;
+            font-family: 'Inter', sans-serif;
+            font-weight: normal;
+            margin-top: 0.25rem;
+        }
+        .action-card {
+            background: #eff6ff;
+            border-left: 4px solid #3b82f6;
+            padding: 1.5rem;
+            margin: 2rem 0;
+            border-radius: 0 0.5rem 0.5rem 0;
+        }
+    </style>
+</head>
+<body class="text-slate-800 text-lg">
+
+    <!-- INTRO -->
+    <div class="slide-container">
+        <div class="content-block">
+            <h1 class="text-5xl font-bold mb-6 text-slate-900">LLM Technical Deep Dive</h1>
+            <p class="text-2xl text-slate-600 mb-8">Building a mental model of how they actually work.</p>
+            
+            <div class="bg-amber-50 border border-amber-200 p-6 rounded-lg mb-8">
+                <p class="font-semibold text-amber-800">Goal: Understand LLMs without deep mathematics or calculus. Let's stop calling it a black box.</p>
+            </div>
+
+            <h2 class="text-3xl font-bold mb-4 mt-12">The Two Main Steps</h2>
+            <div class="flex gap-6 mt-6">
+                <div class="flex-1 bg-slate-50 p-6 rounded-lg border border-slate-200">
+                    <h3 class="font-bold text-xl mb-2 text-blue-600">1. Pre-Training</h3>
+                    <p>Like the <strong>evolution of humans</strong>. The DNA holds the data of humankind.</p>
+                </div>
+                <div class="flex-1 bg-slate-50 p-6 rounded-lg border border-slate-200">
+                    <h3 class="font-bold text-xl mb-2 text-emerald-600">2. Post-Training</h3>
+                    <p>What we <strong>learn</strong> as individual humans interacting with the world.</p>
+                </div>
+            </div>
+        </div>
+        <div class="pen-space">Annotation Space</div>
+    </div>
+
+    <!-- PRE-TRAINING & DATA -->
+    <div class="slide-container">
+        <div class="content-block">
+            <h2 class="text-4xl font-bold mb-8">Step 1: Pre-Training</h2>
+            
+            <h3 class="text-2xl font-bold mb-4 text-slate-700">Raw Text Dataset Creation</h3>
+            <ul class="list-disc pl-6 space-y-3 mb-8 text-xl">
+                <li>Lossy compression</li>
+                <li>URL filtering</li>
+                <li>Text Extraction</li>
+                <li>Language Filtering</li>
+            </ul>
+
+            <div class="action-card">
+                <p class="font-bold text-blue-800 mb-2">🎬 Action: Open Links</p>
+                <a href="https://huggingface.co/spaces/HuggingFaceFW/blogpost-fineweb-v1" target="_blank" class="text-blue-600 hover:underline block mb-2">1. FineWeb Blogpost</a>
+                <a href="https://huggingface.co/datasets/HuggingFaceFW/fineweb" target="_blank" class="text-blue-600 hover:underline block">2. FineWeb Dataset Example (Show the 44 TB)</a>
+            </div>
+        </div>
+        <div class="pen-space">Annotation Space</div>
+    </div>
+
+    <!-- TRANSLATION & TOKENIZATION -->
+    <div class="slide-container">
+        <div class="content-block">
+            <h2 class="text-4xl font-bold mb-6">LLM is a Translation Engine</h2>
+            <p class="mb-8 text-xl">You have an <strong>input vector</strong> and an <strong>output vector</strong>. We multiply a matrix/function in between to translate input to output.</p>
+            
+            <!-- Mathematical Translation Pipeline Diagram -->
+            <div class="flex flex-col lg:flex-row items-center justify-center gap-2 mb-16 mt-8 font-sans">
+                <!-- Box 1 -->
+                <div class="border-2 border-slate-600 rounded-lg p-4 h-48 w-32 flex items-center justify-center bg-white shadow-sm text-center font-medium">
+                    Raw Data
+                </div>
+                
+                <div class="text-slate-400 font-bold text-xl px-1 hidden lg:block">➔</div>
+                <div class="text-slate-400 font-bold text-xl py-2 lg:hidden">⬇</div>
+                
+                <!-- Box 2 -->
+                <div class="border-2 border-slate-600 rounded-[2rem] py-6 px-3 h-48 flex items-center justify-center bg-white shadow-sm text-center text-sm font-medium">
+                    <span style="writing-mode: vertical-rl; transform: rotate(180deg);" class="whitespace-nowrap">Input vectors/matrices</span>
+                </div>
+                
+                <div class="text-slate-400 font-bold text-xl px-1 hidden lg:block">➔</div>
+                <div class="text-slate-400 font-bold text-xl py-2 lg:hidden">⬇</div>
+
+                <!-- Box 3 -->
+                <div class="border-2 border-slate-600 rounded-lg p-5 bg-white shadow-sm relative max-w-sm">
+                    <!-- Loop Arrow -->
+                    <div class="absolute -top-12 right-0 flex flex-col items-center">
+                        <span class="text-xs font-semibold text-slate-700 mb-1 ml-12">Correct error iteratively</span>
+                        <svg width="60" height="40" viewBox="0 0 60 40" class="text-slate-600 ml-12">
+                            <path d="M 50 40 C 50 5, 10 5, 10 35" stroke="currentColor" stroke-width="1.5" fill="none" />
+                            <polygon points="6,30 10,40 14,30" fill="currentColor" />
+                        </svg>
+                    </div>
+
+                    <div class="text-sm font-bold mb-2">Mathematical Computation</div>
+                    <div class="text-sm mb-3">Output = function(Input)</div>
+                    <div class="text-xs mb-3 text-slate-700">Function essentially is implemented through matrix operations essential for translation i.e. finding right choice of vectors to translate</div>
+                    <hr class="border-slate-300 my-3">
+                    <div class="text-xs font-bold mb-2">Example function</div>
+                    <div class="text-[0.65rem] text-slate-500 leading-tight font-mono tracking-tighter">
+                        1/(1 + exp(-(w₀ * (1/(1 + exp(-(w₁ * x₁ + w₂ * x₂ + w₃)))) + w₄<br>
+                        * (1/(1 + exp(-(w₅ * x₁ + w₆ * x₂ + w₇))))<br>
+                        + w₈ * (1/(1 + exp(-(w₉ * x₁ + w₁₀ * x₂ + w₁₁)))) + w₁₂)))
+                    </div>
+                </div>
+                
+                <div class="text-slate-400 font-bold text-xl px-1 hidden lg:block">➔</div>
+                <div class="text-slate-400 font-bold text-xl py-2 lg:hidden">⬇</div>
+                
+                <!-- Box 4 -->
+                <div class="border-2 border-slate-600 rounded-[2rem] py-6 px-3 h-48 flex items-center justify-center bg-white shadow-sm text-center text-sm font-medium">
+                    <span style="writing-mode: vertical-rl; transform: rotate(180deg);" class="whitespace-nowrap">Output vectors/matrices</span>
+                </div>
+                
+                <div class="text-slate-400 font-bold text-xl px-1 hidden lg:block">➔</div>
+                <div class="text-slate-400 font-bold text-xl py-2 lg:hidden">⬇</div>
+                
+                <!-- Box 5 -->
+                <div class="border-2 border-slate-600 rounded-lg p-4 h-48 w-32 flex flex-col items-center justify-center bg-white shadow-sm text-center">
+                    <div class="mb-2 font-medium">Outcome</div>
+                    <div class="text-xs text-slate-500 leading-tight">(Could be Responses, classes, actions etc.)</div>
+                </div>
+            </div>
+
+            <h3 class="text-2xl font-bold mb-6 text-slate-700">How do we represent text as a sequence?</h3>
+            
+            <div class="space-y-6">
+                <!-- Visualizing the compression -->
+                <div class="flex items-center gap-4 bg-slate-50 p-4 rounded-lg border border-slate-200">
+                    <div class="font-bold text-slate-500 w-32">Bits (0/1)</div>
+                    <div class="text-xl">➔ 2 symbols</div>
+                    <div class="text-sm text-slate-500 ml-auto">Needs huge compute/memory</div>
+                </div>
+                
+                <div class="flex items-center gap-4 bg-slate-50 p-4 rounded-lg border border-slate-200">
+                    <div class="font-bold text-slate-500 w-32">Bytes</div>
+                    <div class="text-xl">➔ 256 symbols</div>
+                    <div class="text-sm text-slate-500 ml-auto">Compressing bits</div>
+                </div>
+
+                <div class="flex items-center gap-4 bg-blue-50 p-4 rounded-lg border border-blue-200 shadow-sm transform scale-105">
+                    <div class="font-bold text-blue-700 w-32">Byte Pair Encoding</div>
+                    <div class="text-xl font-bold text-blue-900">➔ ~100k symbols</div>
+                    <div class="text-sm text-blue-700 ml-auto">Iterative compression of common pairs</div>
+                </div>
+            </div>
+
+            <div class="mt-12 bg-white border-2 border-slate-800 rounded-lg p-6 font-mono text-center shadow-lg">
+                <div class="text-lg mb-2 text-slate-500">Example: ~5000 text characters</div>
+                <div class="text-2xl mb-2">≈ 40,000 bits <span class="text-sm text-slate-400">(vocab size 2)</span></div>
+                <div class="text-2xl mb-2">≈ 5,000 bytes <span class="text-sm text-slate-400">(vocab size 256)</span></div>
+                <div class="text-3xl font-bold text-emerald-600 mt-4">≈ 1,300 Tokens <span class="text-sm font-normal text-slate-500">(vocab size 100,277)</span></div>
+            </div>
+
+            <div class="action-card mt-8">
+                <p class="font-bold text-blue-800 mb-2">🎬 Action: Demonstrate Tokens</p>
+                <a href="https://tiktokenizer.vercel.app/" target="_blank" class="text-blue-600 hover:underline block">Open Tiktokenizer (Copy an article from web and show it)</a>
+                <p class="text-sm mt-2">Explain: "These token sequences are what the LLM sees. To a human, it's unreadable."</p>
+            </div>
+        </div>
+        <div class="pen-space">Annotation Space</div>
+    </div>
+
+    <!-- NEURAL NETWORK TRAINING & CONTEXT WINDOW -->
+    <div class="slide-container">
+        <div class="content-block">
+            <h2 class="text-4xl font-bold mb-6">Neural Network Training</h2>
+            <p class="mb-8 text-xl">We model the statistical relation of these tokens. How do they follow each other?</p>
+
+            <h3 class="text-2xl font-bold mb-4 text-slate-700">The Context Window</h3>
+            <p class="mb-8">We take a fixed length of tokens at once (e.g., Context Window = 4). Longer window = more neurons, more computation complexity.</p>
+
+            <!-- Custom Context Window Diagram -->
+            <div class="flex items-center justify-between bg-slate-50 p-8 rounded-xl border border-slate-200">
+                <!-- Input Context -->
+                <div class="flex flex-col items-center">
+                    <div class="text-sm font-bold text-slate-500 mb-2">Context Window (Sequence of 4)</div>
+                    <div class="flex gap-2 p-3 bg-white border-2 border-slate-300 rounded-lg">
+                        <div><div class="token-box">91</div><div class="token-text">"I"</div></div>
+                        <div><div class="token-box">860</div><div class="token-text">"View"</div></div>
+                        <div><div class="token-box">287</div><div class="token-text">"ing"</div></div>
+                        <div><div class="token-box">11579</div><div class="token-text">"Single"</div></div>
+                    </div>
+                </div>
+
+                <!-- Neural Network Arrow -->
+                <div class="flex flex-col items-center px-4">
+                    <div class="text-sm font-bold text-blue-600 mb-1">Neural Network</div>
+                    <div class="w-16 h-1 bg-blue-500 relative">
+                        <div class="absolute right-0 top-1/2 transform translate-x-1/2 -translate-y-1/2 w-0 h-0 border-t-8 border-t-transparent border-l-8 border-l-blue-500 border-b-8 border-b-transparent"></div>
+                    </div>
+                </div>
+
+                <!-- Probabilities Output -->
+                <div class="flex flex-col">
+                    <div class="text-sm font-bold text-slate-500 mb-2 text-center">100,277 Probabilities for Next Token</div>
+                    <div class="flex items-stretch gap-4">
+                        <div class="w-6 bg-slate-300 rounded border border-slate-400 h-48 relative overflow-hidden flex flex-col justify-between py-2">
+                            <div class="w-full h-1 bg-blue-500"></div>
+                            <div class="w-full h-1 bg-blue-500 opacity-50"></div>
+                            <div class="w-full h-1 bg-emerald-500"></div>
+                            <div class="w-full h-1 bg-blue-500 opacity-20"></div>
+                        </div>
+                        <div class="flex flex-col justify-between h-48 py-1">
+                            <div class="text-sm">➔ 19438 ("Direction"): 2%</div>
+                            <div class="text-sm">➔ 11799 ("Case"): 1%</div>
+                            <div class="text-sm font-bold text-emerald-600">➔ 3962 ("Post"): 4% (Correct Answer)</div>
+                            <div class="text-sm text-slate-400">...</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-8 space-y-4 text-lg">
+                <p><strong>Backpropagation:</strong> We start with random weights. We know the <em>actual</em> next token from the web data. We find the error and tune the weights (billions of parameters/knobs) until results become persistent.</p>
+                <p class="font-semibold text-indigo-700">Transformer Architecture = Code + Extracted Tuned Weights.</p>
+            </div>
+
+            <div class="action-card mt-8">
+                <p class="font-bold text-blue-800 mb-2">🎬 Action: LLM Visualization</p>
+                <a href="https://bbycroft.net/llm" target="_blank" class="text-blue-600 hover:underline block font-semibold">Explore 3D Neural Network Visualization (bbycroft.net)</a>
+                <p class="text-sm mt-2 text-slate-700">Explain: "Though it looks complex, these are very simple neurons compared to biological neurons, with no memory but only having the ability to fire a value."</p>
+            </div>
+        </div>
+        <div class="pen-space">Annotation Space</div>
+    </div>
+
+    <!-- POST TRAINING: SFT -->
+    <div class="slide-container">
+        <div class="content-block">
+            <h2 class="text-4xl font-bold mb-6">Post-Training: Supervised Fine Tuning (SFT)</h2>
+            <p class="mb-6 text-xl">We don't just want next-token predictions; we want conversational answers. We use <strong>human-labeled datasets</strong> with Q&A style conversation documents.</p>
+
+            <!-- Chat Visuals -->
+            <div class="space-y-6 mb-8">
+                
+                <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+                    <div class="mb-2"><span class="font-bold text-slate-800">Human:</span> <span class="text-slate-600">"What is 2+2?"</span></div>
+                    <div class="mb-2"><span class="font-bold text-blue-600">Assistant:</span> <span class="text-blue-800">"2+2 = 4"</span></div>
+                    <div class="mb-2"><span class="font-bold text-slate-800">Human:</span> <span class="text-slate-600">"What if it was * instead of +?"</span></div>
+                    <div><span class="font-bold text-blue-600">Assistant:</span> <span class="text-blue-800">"2*2 = 4, same as 2+2!"</span></div>
+                </div>
+
+                <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+                    <div class="mb-2"><span class="font-bold text-slate-800">Human:</span> <span class="text-slate-600">"How can I hack into a computer?"</span></div>
+                    <div><span class="font-bold text-blue-600">Assistant:</span> <span class="text-red-600 font-semibold">"I'm sorry I can't help with that."</span></div>
+                </div>
+
+            </div>
+
+            <div class="grid grid-cols-2 gap-6 mt-8">
+                <div class="bg-slate-50 p-4 rounded-lg border border-slate-200">
+                    <h4 class="font-bold mb-2">The Catch</h4>
+                    <p class="text-sm">Fine-tuning until persistent responses emerge can lead to companies propagating their own views/politics.</p>
+                </div>
+                <div class="bg-slate-50 p-4 rounded-lg border border-slate-200">
+                    <h4 class="font-bold mb-2">Capabilities Unlocked</h4>
+                    <p class="text-sm">Self-awareness ("Who are you?"), Tool Calling via placeholders (e.g., <code>&lt;call web-search&gt;</code>).</p>
+                </div>
+            </div>
+
+            <div class="action-card">
+                <p class="font-bold text-blue-800 mb-2">🎬 Action: SFT Demonstrations</p>
+                <p class="mb-1 text-sm font-bold">1. Cut-off Dates & Hallucinations:</p>
+                <ul class="list-disc pl-5 text-sm mb-3">
+                    <li>Who is competing for president in 2024?</li>
+                    <li>Who is Jamie Dimon?</li>
+                    <li>Who is the president of US?</li>
+                </ul>
+                <a href="https://huggingface.co/Qwen/Qwen2-1.5B-Instruct?inference_provider=featherless-ai" target="_blank" class="text-blue-600 hover:underline text-sm mb-3 block">Test on Qwen Instruct</a>
+
+                <p class="mb-1 text-sm font-bold mt-4">2. Token Math Issues (9.9 vs 9.11)</p>
+                <p class="text-sm mb-2">Explain why Python tools are needed for math ops.</p>
+            </div>
+        </div>
+        <div class="pen-space">Annotation Space</div>
+    </div>
+
+    <!-- RLHF -->
+    <div class="slide-container">
+        <div class="content-block">
+            <h2 class="text-4xl font-bold mb-6">Post-Training: RLHF</h2>
+            <h3 class="text-xl text-slate-600 mb-8">Reinforcement Learning from Human Feedback</h3>
+            
+            <p class="mb-6 text-lg">SFT can lead to overfitting. How do we train for text generation in unverifiable domains? OpenAI introduced RLHF: humans rate generated responses, creating a verifiable reward mechanism.</p>
+
+            <div class="bg-indigo-900 text-white rounded-xl p-8 my-8 shadow-xl">
+                <h3 class="text-2xl font-bold mb-6 text-indigo-200 border-b border-indigo-700 pb-2">The Grand Analogy</h3>
+                
+                <div class="space-y-6">
+                    <div class="flex items-start gap-4">
+                        <div class="w-12 h-12 bg-indigo-700 rounded-full flex items-center justify-center font-bold text-xl shrink-0">1</div>
+                        <div>
+                            <h4 class="text-xl font-bold text-indigo-100">Pre-Training</h4>
+                            <p class="text-indigo-300">Reading a massive Math textbook.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="flex items-start gap-4">
+                        <div class="w-12 h-12 bg-indigo-700 rounded-full flex items-center justify-center font-bold text-xl shrink-0">2</div>
+                        <div>
+                            <h4 class="text-xl font-bold text-indigo-100">SFT (Supervised Fine Tuning)</h4>
+                            <p class="text-indigo-300">Preparing for a test by doing and verifying answers for specific questions in the textbook.</p>
+                        </div>
+                    </div>
+
+                    <div class="flex items-start gap-4">
+                        <div class="w-12 h-12 bg-emerald-500 rounded-full flex items-center justify-center font-bold text-xl shrink-0">3</div>
+                        <div>
+                            <h4 class="text-xl font-bold text-white">RLHF</h4>
+                            <p class="text-indigo-200">Writing a practice exam. It gets graded/rewarded by others. As you write more practice tests, you perform better in the main exams.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <p class="text-sm text-slate-500 italic mt-4 text-center">"Honestly, in my opinion, this is also a fancy flavor of supervised learning."</p>
+        </div>
+        <div class="pen-space">Annotation Space</div>
+    </div>
+
+    <!-- REASONING -->
+    <div class="slide-container">
+        <div class="content-block">
+            <h2 class="text-4xl font-bold mb-6">The Next Frontier: Reasoning</h2>
+            <p class="mb-8 text-xl">How does it work? The LLM generates text to help it understand better, puts context in place, invalidates wrong paths, and tries different ways before outputting the final answer.</p>
+
+            <div class="bg-slate-50 p-6 rounded-xl border border-slate-200">
+                <h4 class="font-bold text-lg mb-4 text-slate-700">The "Thinking" Process</h4>
+                <div class="space-y-3 font-mono text-sm">
+                    <div class="text-slate-400">&gt; Wait, let me look at the problem...</div>
+                    <div class="text-slate-400">&gt; If I try approach A, it leads to X...</div>
+                    <div class="text-slate-400">&gt; That doesn't make sense because of Y...</div>
+                    <div class="text-slate-400">&gt; Let me try approach B instead...</div>
+                    <div class="text-emerald-600 font-bold mt-4">Final Answer: [Delivers highly accurate response]</div>
+                </div>
+            </div>
+
+            <div class="action-card mt-8">
+                <p class="font-bold text-blue-800 mb-2">🎬 Action: Reasoning Demo</p>
+                <p class="text-lg">Show how DeepSeek vs ChatGPT works in this thinking phase.</p>
+            </div>
+            
+            <div class="mt-16 text-center">
+                <h3 class="text-2xl font-bold text-slate-800">You now have a solid mental map of LLMs.</h3>
+                <p class="text-slate-500 mt-2">Let me know if you want more sessions like this!</p>
+            </div>
+        </div>
+        <div class="pen-space">Annotation Space</div>
+    </div>
+
+</body>
+</html>
